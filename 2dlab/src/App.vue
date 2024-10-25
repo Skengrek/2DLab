@@ -1,18 +1,14 @@
 <template>
-  <Application :width="640" :height="480">
-    <TestComponent1 msg="Welcome to Your Vue.js App"/>
-  </Application>
+    <MainContainer/>
 </template>
 
 <script>
-import { Application } from "vue3-pixi";
-import TestComponent1 from './components/TestComponent1.vue'
+import MainContainer from './components/GameOfLife/MainContainer1.vue'
 
 export default {
   name: 'App',
   components: {
-    TestComponent1,
-    Application,
+    MainContainer,
   }
 }
 </script>

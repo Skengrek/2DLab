@@ -1,10 +1,11 @@
 <script setup>
-    import { Graphics, Application, Ticker } from 'pixi.js';
+    import { Application, Ticker, Container, Sprite, Texture} from 'pixi.js';
 </script>
 
 <template>
     <div id="pixi-container"></div>
     <button @click="regeneratGrid">Regenerate</button>
+    <button @click="processTick">One Tick</button>
     <button @click="appTicker.start">Start Ticker</button>
     <button @click="appTicker.stop">Stop Ticker</button>
 </template>
@@ -15,56 +16,67 @@ export default {
     data() {
         return {
             app: new Application(),
-            graph: new Graphics(),
+            container: new Container(),
             appTicker: Ticker.shared,
+            width: 500,
+            height: 500,
+            particuleWidth: 10,
+            particuleHeight: 10,
             tick: 0,
-            grid: []
+            grid: [],
+            newGrid: [],
+            sprites: [],
+            isSpriteCreated: false
         }
     },
     async mounted(){
-        await this.app.init({ width: 800, height: 600, forceCanvas: true })
+        await this.app.init({ width: this.width, height: this.height})
+        this.app.stage.addChild(this.container)
         document.getElementById('pixi-container').appendChild(this.app.canvas);
+        this.startUp()
         this.regeneratGrid()
     },
     methods: {
-        initGrid(){
+        startUp(){
             this.grid = []
-            for (let x=0; x<80;x++){
+            this.newGrid = []
+            this.sprites = []
+            for (let x=0; x<this.width/this.particuleWidth;x++){
                 this.grid[x] = []
-                for (let y=0; y<80; y++){
-                    this.grid[x][y] = {
-                        value: Math.random() > 0.7
-                    }
+                this.newGrid[x] = []
+                this.sprites[x] = []
+                for (let y=0; y<this.height/this.particuleHeight; y++){
+                    this.grid[x][y] = {value:0}
+                    this.newGrid[x][y] = {value:0}
+                    const rect = new Sprite(Texture.WHITE)
+                    rect.width=this.particuleWidth
+                    rect.height=this.particuleHeight
+                    rect.x = x*this.particuleWidth
+                    rect.y = y*this.particuleHeight
+                    this.sprites[x][y] = rect
+                    this.container.addChild(rect)
                 }
             }
 
+        },
+        regeneratGrid(){
+            this.initValues()
+            this.initTicker()
+        },
+        initValues(){
+            for (let x in this.grid){
+                for (let y in this.grid[x]){
+                    let value = Math.random() > 0.7
+                    this.grid[x][y]={value:value}
+                    this.sprites[x][y].renderable = value
+                }
+            }
         },
         initTicker(){
             this.appTicker.autoStart = false
             this.appTicker.add(this.processTick)
         },
-
-        regeneratGrid(){
-            this.initGrid()
-            this.renderRect()
-            this.initTicker()
-        },
-        renderRect() {
-            this.graph.clear()
-            for (let x in this.grid){
-                for (let y in this.grid[x]){
-                    if (this.grid[x][y].value){
-                        this.graph.rect(x*10, y*10, 10, 10);
-                    }
-                }
-            }
-            this.graph.fill(0x00a3af);
-            this.graph.x = 0;
-            this.graph.y = 0;
-            this.app.stage.addChild(this.graph);
-        },
         processTick(){
-            this.graph.clear()
             var newGrid = []
             for (let x in this.grid){
                 newGrid[x] = []
@@ -79,16 +91,13 @@ export default {
                         if (sumAlive===3){newValue = true}
                     }
                     newGrid[x][y] = {value: newValue}
-                    if (newGrid[x][y].value){
-                        this.graph.rect(x*10, y*10, 10, 10);
-                    }
+                    this.sprites[x][y].renderable = newValue
                 }
             }
             this.grid = newGrid
-            this.graph.fill(0x00a3af);
         },
         countAliveNeighboor(x, y){
-            let sumAlive = 0
+            let nbAliveNeighboor = 0
             let previousX = x - 1
             if (previousX<0){previousX=this.grid.length-1}
             let previousY = y - 1
@@ -97,34 +106,45 @@ export default {
             let nextX = parseInt(x)+1
             if (nextX>this.grid.length-1){nextX=0}
             let nextY = parseInt(y)+1
+
             if (nextY>this.grid[x].length-1){nextY=0}
+            
             if (this.grid[previousX][previousY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
             if (this.grid[previousX][y].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
             if (this.grid[previousX][nextY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
+
             if (this.grid[x][previousY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
             if (this.grid[x][nextY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
+
             if (this.grid[nextX][previousY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
             if (this.grid[nextX][y].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
             if (this.grid[nextX][nextY].value){
-                sumAlive++
+                nbAliveNeighboor++
             }
-            return sumAlive
-        }
+            
+            return nbAliveNeighboor
+        },
+        clickContainer(e){
+            console.log(e)
+            const x = 0
+            const y = 0
+            this.sprites[x][y].renderable = true
+            this.grid[x][y] = true
+        },
     }
-
 }
 </script>

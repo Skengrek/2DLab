@@ -4,6 +4,7 @@
 
 <template>
     <div id="pixi-container"></div>
+    <div>{{ time }}ms</div>
     <button @click="regeneratGrid">Regenerate</button>
     <button @click="processTick">One Tick</button>
     <button @click="appTicker.start">Start Ticker</button>
@@ -18,15 +19,17 @@ export default {
             app: new Application(),
             container: new Container(),
             appTicker: Ticker.shared,
-            width: 500,
-            height: 500,
+            width: 1000,
+            height: 1000,
             particuleWidth: 10,
             particuleHeight: 10,
+            time_per_frame:50,
             tick: 0,
             grid: [],
             newGrid: [],
             sprites: [],
-            isSpriteCreated: false
+            isSpriteCreated: false,
+            time: 0,
         }
     },
     async mounted(){
@@ -77,73 +80,36 @@ export default {
             this.appTicker.add(this.processTick)
         },
         processTick(){
-            var newGrid = []
-            for (let x in this.grid){
-                newGrid[x] = []
-                for (let y in this.grid[x]){
-                    var sumAlive = this.countAliveNeighboor(x, y)
-                    var newValue = false
-                    if (this.grid[x][y].value){
-                        if (sumAlive===2){newValue = true}
-                        if (sumAlive===3){newValue = true}
-                    }
-                    else {
-                        if (sumAlive===3){newValue = true}
-                    }
-                    newGrid[x][y] = {value: newValue}
-                    this.sprites[x][y].renderable = newValue
+            const start = performance.now();
+
+            for (let x = 0; x < this.grid.length; x++) {
+                for (let y = 0; y < this.grid[x].length; y++) {
+                    const sumAlive = this.countAliveNeighbor(x, y);
+                    const isAlive = this.grid[x][y].value;
+                    const newValue = (isAlive && (sumAlive === 2 || sumAlive === 3)) || (!isAlive && sumAlive === 3);
+                    this.newGrid[x][y] = { value: newValue };
+                    this.sprites[x][y].renderable = newValue;
                 }
             }
-            this.grid = newGrid
+
+            [this.grid, this.newGrid] = [this.newGrid, this.grid]; // Swap references
+            this.time = performance.now() - start;
         },
-        countAliveNeighboor(x, y){
-            let nbAliveNeighboor = 0
-            let previousX = x - 1
-            if (previousX<0){previousX=this.grid.length-1}
-            let previousY = y - 1
-            if (previousY<0){previousY=this.grid[x].length-1}
+        countAliveNeighbor(x, y){
+            const maxX = this.grid.length;
+            const maxY = this.grid[0].length;
+            let nbAliveNeighbor = 0;
 
-            let nextX = parseInt(x)+1
-            if (nextX>this.grid.length-1){nextX=0}
-            let nextY = parseInt(y)+1
-
-            if (nextY>this.grid[x].length-1){nextY=0}
-            
-            if (this.grid[previousX][previousY].value){
-                nbAliveNeighboor++
-            }
-            if (this.grid[previousX][y].value){
-                nbAliveNeighboor++
-            }
-            if (this.grid[previousX][nextY].value){
-                nbAliveNeighboor++
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+                    const nx = (x + dx + maxX) % maxX;
+                    const ny = (y + dy + maxY) % maxY;
+                    if (this.grid[nx][ny].value) nbAliveNeighbor++;
+                }
             }
 
-            if (this.grid[x][previousY].value){
-                nbAliveNeighboor++
-            }
-            if (this.grid[x][nextY].value){
-                nbAliveNeighboor++
-            }
-
-            if (this.grid[nextX][previousY].value){
-                nbAliveNeighboor++
-            }
-            if (this.grid[nextX][y].value){
-                nbAliveNeighboor++
-            }
-            if (this.grid[nextX][nextY].value){
-                nbAliveNeighboor++
-            }
-            
-            return nbAliveNeighboor
-        },
-        clickContainer(e){
-            console.log(e)
-            const x = 0
-            const y = 0
-            this.sprites[x][y].renderable = true
-            this.grid[x][y] = true
+            return nbAliveNeighbor;
         },
     }
 }

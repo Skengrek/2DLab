@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Project</title>
+    <style>
+        body {
+            margin: 0
+        }
+        .button-container {
+            position: fixed; /* Stays in place even if you scroll */
+            top: 20px; /* Distance from the top of the page */
+            right: 20px; /* Distance from the right side of the page */
+            display: flex;
+            gap: 10px;
+            z-index: 1000; /* Higher than most other elements */
+        }
+
+        .button-container button {
+            padding: 10px 15px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <script type="module" src="src/NeuralCellularAutomata.js"></script>
+</body>
+</html>

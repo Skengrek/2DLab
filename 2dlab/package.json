@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@pixi/devtools": "^2.0.1",
     "core-js": "^3.8.3",
     "pinia": "^2.2.4",
     "pixi.js": "^8.5.1",
